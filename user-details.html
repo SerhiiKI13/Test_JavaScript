@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Emblema+One&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: gray;
+            color: white;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-optical-sizing: auto;
+            font-style: normal;
+        }
+
+        #userInfo {
+            width: 80%;
+            background-color: slategray;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: start;
+            align-items: center;
+            font-size: 20px;
+            border: white 2px solid;
+        }
+
+        .btn {
+            width: 90%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            background: #0B63F6;
+            box-shadow: 0 5px 0 #003CC5;
+            font-size: 18px;
+            margin-left: 60px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #003CC5;
+            box-shadow: none;
+            position: relative;
+            top: 5px;
+        }
+
+        .posts-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding-top: 30px;
+            margin: 0 auto;
+        }
+
+
+        .post {
+            width: 200px;
+            height: 150px;
+            background-color: slategray;
+            border-radius: 5px;
+            text-align: center;
+            border: white 2px solid;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post a {
+            width: 100px;
+            height: 23px;
+            text-align: center;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            background: #0B63F6;
+            box-shadow: 0 5px 0 #003CC5;
+            margin-bottom: 10px;
+        }
+        .post a:hover {
+            background: #003CC5;
+            box-shadow: none;
+            position: relative;
+            top: 5px;
+        }
+        .back {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 200px;
+            height: 50px;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            background: #0B63F6;
+            box-shadow: 0 5px 0 #003CC5;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .back:hover {
+            background: #003CC5;
+            box-shadow: none;
+            position: relative;
+            top: 5px;
+        }
+        footer{
+            height: 50px;
+        }
+    </style>
+</head>
+<body>
+<!--// На странице user-details.html:
+// 4 Вивести всю, без виключення, інформацію про об'єкт user на який клікнули
+// 5 Додати кнопку "post of current user", при кліку на яку, з'являються title всіх постів поточного юзера
+// (для получения постов используйте эндпоинт https://jsonplaceholder.typicode.com/users/USER_ID/posts)
+//     6 Каждому посту додати кнопку/посилання, при кліку на яку відбувається перехід на сторінку post-details.html, котра має детальну інфу про поточний пост.
+//-->
+<div id="userInfo"></div>
+
+
+
+<script>
+let userInfo = document.getElementById('userInfo');
+let userStorage = JSON.parse(localStorage.getItem('key'));
+console.log(userStorage)
+let ul = document.createElement('ul');
+for (const user in userStorage) {
+    let value = userStorage[user];
+    let liMain = document.createElement('li');
+    liMain.innerText = `${user}:`;
+    if (typeof value === 'object'){
+        let ulSub = document.createElement('ul');
+        for (const subValue in value) {
+            let subValueKey = value[subValue];
+            let liSub = document.createElement('li');
+            liSub.innerText= `${subValue}:`;
+            if (typeof subValueKey === 'object') {
+                let deepUl = document.createElement('ul');
+                for (const deep in subValueKey) {
+                    let deepLi = document.createElement('li');
+                    deepLi.innerText = `${deep}: ${subValueKey[deep]}`
+                    deepUl.appendChild(deepLi);
+                }
+                liSub.appendChild(deepUl);
+            }
+            else{
+                liSub.innerText = `${subValue}: ${subValueKey}`;
+            }
+            ulSub.appendChild(liSub)
+        }
+        liMain.appendChild(ulSub);
+    }else {
+        liMain.innerText= `${user}: ${value}`
+    }
+
+ul.appendChild(liMain);
+}
+userInfo.appendChild(ul);
+let userId = userStorage.id;
+let postsContainer = document.createElement('div');
+postsContainer.classList.add('posts-container');
+let button = document.createElement('button');
+button.innerText = `post of current user`
+button.classList.add('btn');
+button.addEventListener("click", function () {
+    fetch(`https://jsonplaceholder.typicode.com/users/${userId}/posts`)
+        .then(res=> res.json())
+        .then(post => {
+            console.log(post);
+            for (const pElement of post) {
+                let postDiv = document.createElement("div");
+                postDiv.classList.add("post");
+                let p = document.createElement('p');
+                p.innerText = `${pElement.title}`
+                let a = document.createElement('a');
+                a.href = 'post-details.html'
+                a.innerText = 'Перейти';
+                a.target = 'blank';
+                a.addEventListener("click", function () {
+                    localStorage.setItem('post', JSON.stringify(pElement))
+                })
+                postDiv.append(p, a);
+                postsContainer.appendChild(postDiv);
+            }
+        })
+})
+document.body.appendChild(postsContainer);
+userInfo.append(button);
+let aBack = document.createElement('a');
+aBack.href = 'index.html';
+aBack.innerText = 'Back';
+aBack.classList.add('back');
+document.body.appendChild(aBack);
+</script>
+<footer></footer>
+</body>
+</html>
